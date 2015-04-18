@@ -177,7 +177,8 @@ public class DetermineVersionAction implements Action<Project> {
 	
 	private static Version incrementDev(Version version) {
 		Version newVersion = version.clone();
-		newVersion.incMinor();
+		newVersion.incrementMinor();
+		newVersion.resetMicro();
 		newVersion.setQualifier(DEV_QUALIFIER);
 		return newVersion;
 	}
