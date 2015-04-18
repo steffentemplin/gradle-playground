@@ -11,6 +11,7 @@ import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,24 +28,34 @@ public class DetermineVersion extends DefaultTask {
 	
 	@TaskAction
 	public void perform() throws IOException, GitAPIException {
-		File rootDir = getProject().getRootDir();
+		Project project = getProject();
+		File rootDir = project.getRootDir();
 		Git git = Git.open(rootDir.getParentFile());
 		String currentBranch = git.getRepository().getBranch();
+		
 		Version currentVersion;
 		if (currentBranch.equals("master")) {
 			// TODO: abort?
 			currentVersion = handleMaster(git);
-		} else if (currentBranch.startsWith("hotfix-")) {
-			currentVersion = handleHotfix(git);
-		} else if (currentBranch.startsWith("release-")) {
-			currentVersion = handleRelease(git);
-		} else {
-			// behavior is the same for develop, feature branches, etc.
+		} else if (currentBranch.equals("develop")) {
 			currentVersion = handleDevelop(git);
+		} else {
+			Matcher releaseBranch = getReleaseBranchPattern().matcher(currentBranch);
+			if (releaseBranch.matches()) {
+				currentVersion = handleRelease(git, Version.parse(releaseBranch.group(1)));
+			} else {
+				Matcher hotfixBranch = getHotfixBranchPattern().matcher(currentBranch);
+				if (hotfixBranch.matches()) {
+					currentVersion = handleHotfix(git, Version.parse(hotfixBranch.group(1)));
+				} else {
+					// behavior is the same for develop, feature branches, etc.
+					currentVersion = handleDevelop(git);
+				}
+			}
 		}
 
-		getProject().setVersion(currentVersion);
-		LOG.info("Version was set to " + currentVersion + " for project " + getProject().getName());
+		project.setVersion(currentVersion);
+		LOG.info("Version was set to " + currentVersion + " for project " + project.getName());
 	}
 	
 	private Version handleMaster(Git git) throws GitAPIException {
@@ -78,49 +89,33 @@ public class DetermineVersion extends DefaultTask {
 		}
 	}
 	
-	private Version handleHotfix(Git git) throws IOException {
-		Pattern hotfixBranch = Pattern.compile(getProject().getName() + "-hotfix-(" + Version.VERSION_PATTERN + ')');
-		String branch = git.getRepository().getBranch();
-		Matcher matcher = hotfixBranch.matcher(branch);
-		if (matcher.matches()) {
-			Version version = Version.parse(matcher.group(1));
-			if (isReleaseBuild()) {
-				version.setQualifier(RELEASE_QUALIFIER);
-			} else {
-				version.setQualifier(DEV_QUALIFIER);
-			}
-			return version;
+	private Version handleHotfix(Git git, Version version) throws IOException {
+		if (isReleaseBuild()) {
+			version.setQualifier(RELEASE_QUALIFIER);
+		} else {
+			version.setQualifier(DEV_QUALIFIER);
 		}
 		
-		LOG.warn("Hotfix branch '{}' does not follow naming convention. Version is set to default '{}'!", branch, DEFAULT_VERSION);
-		return DEFAULT_VERSION;
+		return version;
 	}
 	
-	private Version handleRelease(Git git) throws IOException {
-		Pattern releaseBranch = Pattern.compile(getProject().getName() + "-release-(" + Version.VERSION_PATTERN + ')');
-		String branch = git.getRepository().getBranch();
-		Matcher matcher = releaseBranch.matcher(branch);
-		if (matcher.matches()) {
-			Version version = Version.parse(matcher.group(1));
-			if (isReleaseBuild()) {
-				version.setQualifier(RELEASE_QUALIFIER);
-			} else {
-				version.setQualifier(DEV_QUALIFIER);
-			}
-			return version;
+	private Version handleRelease(Git git, Version version) throws IOException {
+		if (isReleaseBuild()) {
+			version.setQualifier(RELEASE_QUALIFIER);
+		} else {
+			version.setQualifier(DEV_QUALIFIER);
 		}
 		
-		LOG.warn("Release branch '{}' does not follow naming convention. Version is set to default '{}'!", branch, DEFAULT_VERSION);
-		return DEFAULT_VERSION;
+		return version;
 	}
 	
 	private boolean isReleaseBuild() {
-		return false; // TODO
+		return getProject().hasProperty("release");
 	}
 	
 	private Version getLastRelease(Git git) throws GitAPIException {
 		Version lastRelease = null;
-		Pattern releaseTag = Pattern.compile(getProject().getName() + "-(" + Version.VERSION_PATTERN + ')');
+		Pattern releaseTag = getReleaseTagPattern();
 		List<Ref> tags = git.tagList().call();
 		for (Ref tag : tags) {
 			Matcher matcher = releaseTag.matcher(tag.getName());
@@ -137,7 +132,7 @@ public class DetermineVersion extends DefaultTask {
 	
 	private Version getNextRelease(Git git) throws GitAPIException {
 		Version nextRelease = null;
-		Pattern releaseBranch = Pattern.compile(getProject().getName() + "-release-(" + Version.VERSION_PATTERN + ')');
+		Pattern releaseBranch = getReleaseBranchPattern();
 		List<Ref> branches = git.branchList().setListMode(ListMode.ALL).call(); // TODO: list remote branches only
 		for (Ref branch : branches) {
 			String branchName = branch.getName();
@@ -168,6 +163,18 @@ public class DetermineVersion extends DefaultTask {
 		newVersion.incMinor();
 		newVersion.setQualifier(DEV_QUALIFIER);
 		return newVersion;
+	}
+	
+	private Pattern getReleaseBranchPattern() {
+		return Pattern.compile(getProject().getName() + "-release-(" + Version.VERSION_PATTERN + ')');
+	}
+	
+	private Pattern getHotfixBranchPattern() {
+		return Pattern.compile(getProject().getName() + "-hotfix-(" + Version.VERSION_PATTERN + ')');
+	}
+	
+	private Pattern getReleaseTagPattern() {
+		return Pattern.compile(getProject().getName() + "-(" + Version.VERSION_PATTERN + ')');
 	}
 
 }
