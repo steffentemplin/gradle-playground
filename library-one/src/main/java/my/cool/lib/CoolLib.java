@@ -15,5 +15,9 @@ public class CoolLib {
 	public static void niceMethod(String name) {
 		System.out.println(name + " is really really nice");
 	}
+	
+	public static void anotherMethod() {
+		System.out.println("Hi there!");
+	}
 
 }

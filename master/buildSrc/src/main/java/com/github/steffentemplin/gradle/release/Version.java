@@ -58,16 +58,28 @@ public class Version implements Comparable<Version>, Cloneable {
 		return qualifier;
 	}
 	
-	public void incMajor() {
+	public void incrementMajor() {
 		major++;
 	}
 	
-	public void incMinor() {
+	public void incrementMinor() {
 		minor++;
 	}
 	
-	public void incMicro() {
+	public void incrementMicro() {
 		micro++;
+	}
+	
+	public void resetMajor() {
+		major = 0;
+	}
+	
+	public void resetMinor() {
+		minor = 0;
+	}
+	
+	public void resetMicro() {
+		micro = 0;
 	}
 	
 	public void removeQualifier() {

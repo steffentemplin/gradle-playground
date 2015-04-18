@@ -160,7 +160,7 @@ public class DetermineVersion extends DefaultTask {
 	
 	private static Version incrementDev(Version version) {
 		Version newVersion = version.clone();
-		newVersion.incMinor();
+		newVersion.incrementMinor();
 		newVersion.setQualifier(DEV_QUALIFIER);
 		return newVersion;
 	}
