@@ -1,0 +1,17 @@
+apply plugin: 'java'
+
+repositories {
+	jcenter()
+}
+
+group = 'com.github.steffentemplin'
+version = '1.0.0'
+
+dependencies {
+    //compile gradleApi()
+    compile 'org.gradle:gradle-core:2.3'
+    compile 'org.codehaus.groovy:groovy-all:2.3.9'
+    compile 'org.eclipse.jgit:org.eclipse.jgit:3.7.0.201502260915-r'
+    
+    testCompile 'junit:junit:4.12'
+}

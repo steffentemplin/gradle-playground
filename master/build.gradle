@@ -1,0 +1,26 @@
+group = 'com.github.steffentemplin'
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'osgi'
+    apply plugin: 'release-plugin'
+
+    sourceCompatibility = 1.7
+
+    repositories {
+        // https://bintray.com/bintray/jcenter
+        jcenter()
+    }
+    
+    dependencies {
+        testCompile 'junit:junit:4.12'
+        testCompile 'org.powermock:powermock-mockito-release-full:1.6.2'
+    }
+
+    jar {
+        manifest {
+            instruction 'Bundle-Vendor', 'Open-Xchange Inc.'
+        }
+    }
+    
+}
