@@ -124,7 +124,18 @@ public class DetermineVersionAction implements Action<Project> {
 		Pattern releaseTag = getReleaseTagPattern(project);
 		List<Ref> tags = git.tagList().call();
 		for (Ref tag : tags) {
-			Matcher matcher = releaseTag.matcher(tag.getName());
+			String tagName = tag.getName();
+			int idx = tagName.lastIndexOf('/');
+			if (idx >= 0) {
+				try {
+					tagName = tagName.substring(idx + 1);
+				} catch (IndexOutOfBoundsException e) {
+					LOG.warn("Error while parsing tag name", e);
+					continue;
+				}
+			}
+			
+			Matcher matcher = releaseTag.matcher(tagName);
 			if (matcher.matches()) {
 				Version version = Version.parse(matcher.group(1));
 				if (lastRelease == null || version.compareTo(lastRelease) > 0) {
