@@ -12,8 +12,8 @@ package my.cool.lib;
 
 public class CoolLib {
 	
-	public static void niceMethod(String name) {
-		System.out.println(name + " is really really nice");
+	public static void niceMethod(String name, String superior) {
+		System.out.println(name + " is really nice but " + superior + " is awesome!");
 	}
 	
 	public static void anotherMethod() {
