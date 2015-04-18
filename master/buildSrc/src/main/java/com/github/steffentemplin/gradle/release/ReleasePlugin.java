@@ -6,7 +6,11 @@ import org.gradle.api.Project;
 public class ReleasePlugin implements Plugin<Project> {
 
 	public void apply(Project project) {
-		project.getTasks().create("determineVersion", DetermineVersion.class);
+//		DetermineVersion determineVersion = project.getTasks().create("determineVersion", DetermineVersion.class);
+//		Task build = project.getTasks().getByName("build");
+//		build.mustRunAfter(determineVersion);
+
+		project.beforeEvaluate(new DetermineVersionAction());
 	}
 
 }
