@@ -5,6 +5,12 @@ import java.util.regex.Pattern;
 
 public class Version implements Comparable<Version>, Cloneable {
 	
+	static final String SNAPSHOT_QUALIFIER = "DEV";
+	
+	static final String RELEASE_QUALIFIER = "REL";
+	
+	static final Version DEFAULT_VERSION = new Version(1, 0, 0, SNAPSHOT_QUALIFIER);
+	
 	static final String VERSION_PATTERN = "(([1-9][0-9]*|0))\\.(([1-9][0-9]*|0))\\.(([1-9][0-9]*|0))(\\.([0-9a-zA-Z-_\\.]+))?";
 	
 	private static final Pattern VERSION = Pattern.compile(VERSION_PATTERN);
